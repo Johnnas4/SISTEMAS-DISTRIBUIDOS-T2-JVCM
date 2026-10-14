@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Incidencias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 35px auto;
+            padding: 0 18px;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        h1, h2 {
+            color: #174a78;
+        }
+
+        .panel {
+            background: white;
+            padding: 22px;
+            margin-bottom: 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        input, textarea, select, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0 14px;
+            font-size: 15px;
+        }
+
+        button {
+            background: #1769aa;
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .eliminar {
+            background: #b42318;
+        }
+
+        .mensaje {
+            background: #e0f2e8;
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .tabla {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            padding: 12px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #e8eef5;
+        }
+
+        form.inline {
+            min-width: 120px;
+        }
+
+        @media (min-width: 650px) {
+            .campos {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Gestión de Incidencias</h1>
+    <p>Registra, consulta y administra incidencias informáticas.</p>
+
+    {% for mensaje in get_flashed_messages() %}
+        <p class="mensaje">{{ mensaje }}</p>
+    {% endfor %}
+
+    <section class="panel">
+        <h2>Registrar incidencia</h2>
+
+        <form action="{{ url_for('crear') }}" method="post">
+            <div class="campos">
+                <div>
+                    <label for="solicitante">Nombre del solicitante</label>
+                    <input id="solicitante" name="solicitante"
+                           maxlength="100" required>
+                </div>
+
+                <div>
+                    <label for="titulo">Título</label>
+                    <input id="titulo" name="titulo"
+                           maxlength="150" required>
+                </div>
+            </div>
+
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" name="descripcion"
+                      rows="3" maxlength="2000" required></textarea>
+
+            <label for="prioridad">Prioridad</label>
+            <select id="prioridad" name="prioridad">
+                <option value="Baja">Baja</option>
+                <option value="Media" selected>Media</option>
+                <option value="Alta">Alta</option>
+            </select>
+
+            <button type="submit">Registrar incidencia</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Incidencias registradas</h2>
+
+        {% if incidencias %}
+        <div class="tabla">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Incidencia</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in incidencias %}
+                    <tr>
+                        <td>{{ i.id }}</td>
+                        <td>
+                            <strong>{{ i.titulo }}</strong><br>
+                            {{ i.descripcion }}<br>
+                            <small>Solicitante: {{ i.solicitante }}</small><br>
+                            <small>Fecha: {{ i.fecha }}</small>
+                        </td>
+                        <td>{{ i.prioridad }}</td>
+                        <td>
+                            <form class="inline"
+                                  action="{{ url_for('cambiar_estado', incidencia_id=i.id) }}"
+                                  method="post">
+                                <select name="estado" aria-label="Estado">
+                                    {% for estado in
+                                    ['Abierta', 'En proceso', 'Resuelta'] %}
+                                    <option value="{{ estado }}"
+                                        {% if estado == i.estado %}selected{% endif %}>
+                                        {{ estado }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit">Actualizar</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form class="inline"
+                                  action="{{ url_for('eliminar', incidencia_id=i.id) }}"
+                                  method="post"
+                                  onsubmit="return confirm('¿Eliminar esta incidencia?')">
+                                <button class="eliminar" type="submit">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p>Aún no hay incidencias registradas.</p>
+        {% endif %}
+    </section>
+</body>
+</html>
